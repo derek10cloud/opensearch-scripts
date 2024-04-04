@@ -2,24 +2,31 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
+	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	requestsigner "github.com/opensearch-project/opensearch-go/v2/signer/awsv2"
 )
 
-const endpoint = "" // e.g. https://opensearch-domain.region.com or Amazon OpenSearch Serverless endpoint
+var (
+	endpoint = os.Getenv("OPENSEARCH_ENDPOINT") // e.g. https://opensearch-domain.region.com or Amazon OpenSearch Serverless endpoint
+)
 
 func main() {
+	indexName := flag.String("index_name", "", "Index Name")
+	aws_region := flag.String("region", "ap-northeast-2", "AWS Region")
+	flag.Parse()
+
 	ctx := context.Background()
 
 	awsCfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion("<AWS_REGION>"),
-		config.WithCredentialsProvider(
-			getCredentialProvider("<AWS_ACCESS_KEY>", "<AWS_SECRET_ACCESS_KEY>", "<AWS_SESSION_TOKEN>"),
-		),
+		config.WithRegion(*aws_region),
 	)
 	if err != nil {
 		log.Fatal(err) // Do not log.fatal in a production ready app.
@@ -39,15 +46,16 @@ func main() {
 	if err != nil {
 		log.Fatal("client creation err", err)
 	}
-}
 
-func getCredentialProvider(accessKey, secretAccessKey, token string) aws.CredentialsProviderFunc {
-	return func(ctx context.Context) (aws.Credentials, error) {
-		c := &aws.Credentials{
-			AccessKeyID:     accessKey,
-			SecretAccessKey: secretAccessKey,
-			SessionToken:    token,
-		}
-		return *c, nil
+	content := strings.NewReader(`{
+		"size": 1
+	}`)
+
+	search := opensearchapi.SearchRequest{
+		Index: []string{*indexName},
+		Body:  content,
 	}
+
+	searchResponse, err := search.Do(context.Background(), client)
+	fmt.Println("Response", searchResponse.String())
 }
