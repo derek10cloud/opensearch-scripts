@@ -2,6 +2,12 @@
 
 Script for opensearch (AWS Managed)
 
+## Before you run script
+
+- First, you need to set it to 1 shard per node and run the script
+- If you didn't make a cluster, it's best to set the number of nodes to one during test
+- You should limit other search requests from progressing when you run the test
+
 ## environment variable
 
 | Arguments              | Example                               | Default Value  | optional | Note                                                                      |
