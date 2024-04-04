@@ -37,6 +37,12 @@ type Shard struct {
 	Failed     int `json:"failed"`
 }
 
+type IndexInfo struct {
+	DocsCount     string `json:"docs.count"`
+	StoreSize     string `json:"store.size"`
+	SegmentsCount string `json:"segments.count"`
+}
+
 func main() {
 	// Parse the command-line flags
 	flag.Parse()
@@ -51,6 +57,7 @@ func main() {
 	client := makeOpensearchClient(ctx)
 	for avg < *target_avg_search_time {
 		min, max, avg = executeSearchQuery(client, *indexName, *request)
+		IndexInfo := getIndexInfo(client, *indexName)
 		// Print the header
 		fmt.Println()
 		fmt.Println()
@@ -61,9 +68,11 @@ func main() {
 		fmt.Printf("[Index: %s] Average Time: %d ms\n", *indexName, avg)
 		fmt.Printf("[Index: %s] Minimum Search Time: %d ms\n", *indexName, min)
 		fmt.Printf("[Index: %s] Maximum Time: %d ms\n", *indexName, max)
+		fmt.Printf("[Index: %s] Document Count: %s, Storage Size: %s, Segment Count: %s\n", *indexName, IndexInfo[0].DocsCount, IndexInfo[0].StoreSize, IndexInfo[0].SegmentsCount)
 		fmt.Println()
 		fmt.Println("============================================================================================================================================================")
 	}
+
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("===========================================================================Finish===========================================================================")
@@ -120,7 +129,7 @@ func executeSearchQuery(client *opensearch.Client, indexName string, request int
 		body, err := ioutil.ReadAll(searchResponse.Body)
 		if body != nil {
 			if err = json.Unmarshal(body, &resp); err != nil {
-				log.Error().Err(err).Msg("unmashar error")
+				log.Error().Err(err).Msg("unmarshal error")
 			}
 		}
 
@@ -139,6 +148,31 @@ func executeSearchQuery(client *opensearch.Client, indexName string, request int
 	min, max, avg = findMinMaxAverage(tookSlice)
 
 	return min, max, avg
+}
+
+// get index's document count, storage size, and segment count
+func getIndexInfo(client *opensearch.Client, indexName string) []*IndexInfo {
+	cat := opensearchapi.CatIndicesRequest{
+		Index:  []string{indexName},
+		H:      []string{"docs.count", "store.size", "segments.count"},
+		Format: "json",
+	}
+
+	catResponse, err := cat.Do(context.Background(), client)
+	if err != nil {
+		log.Error().Err(err).Msg("cat error")
+	}
+
+	var (
+		indeiesInfo []*IndexInfo
+	)
+	body, err := ioutil.ReadAll(catResponse.Body)
+	if body != nil {
+		if err = json.Unmarshal(body, &indeiesInfo); err != nil {
+			log.Error().Err(err).Msg("unmarshal error")
+		}
+	}
+	return indeiesInfo
 }
 
 // findMinMaxAverage finds the minimum, maximum, and average values of the given slice
