@@ -40,7 +40,6 @@ optional arguments:
   --region                   REGION                     AWS region of cluster (default ap-northeast-2)
   --request                  REQUEST                    Request Number for each index query to get max,min,avg time, this requst will be performed in every second (default 3)
   --target_avg_search_time   TARGET_AVG_SEARCH_TIME     Target Average Search Time(ms) (default 1)
-# e.g)
 ```
 
 You can check your {AWS Profile} from `~/.aws/config`
