@@ -24,11 +24,11 @@ Script for opensearch (AWS Managed)
 
 ```shell
 usage
-aws-vault exec {AWS Profile alias} -- go run main.go --url URL [--region REGION] [--request REQUEST]
+AWS_PROFILE={AWS Profile alias} go run main.go --url URL [--region REGION] [--request REQUEST]
                                                             [--target_avg_search_time TARGET_AVG_SEARCH_TIME]
                                                             --index_name INDEX_NAME
 OR
-AWS_PROFILE={AWS Profile alias} go run main.go --url URL [--region REGION] [--request REQUEST]
+aws-vault exec {AWS Profile alias} -- go run main.go --url URL [--region REGION] [--request REQUEST]
                                                             [--target_avg_search_time TARGET_AVG_SEARCH_TIME]
                                                             --index_name INDEX_NAME
 
